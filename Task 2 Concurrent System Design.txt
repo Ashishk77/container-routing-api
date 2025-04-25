@@ -1,0 +1,95 @@
+Task 2: Concurrent System Design
+1. Problem Statement:
+Design a backend architecture that can serve the container-routing optimization API under heavy concurrent load, ensuring low latency and graceful degradation, taking into account port constraints like variable arrival rates, berth limits, and priority rules.
+
+2. Solution Approach:
+The backend needs to scale efficiently under heavy concurrent load. The following components are key for handling such load and maintaining low latency:
+
+Load Balancer: Distributes requests evenly across API servers to prevent any single server from being overloaded.
+
+Cache: Stores previously computed routing plans to reduce re-computation and lower response times.
+
+Datastore: Holds long-term data like container locations, historical move plans, and other metadata.
+
+API Servers: Handles requests and applies the optimization algorithm.
+
+Monitoring & Alerts: Tracks the performance of the system and triggers alerts if any part of the system fails or starts to degrade.
+
+3. High-Level System Diagram:
+sql
+Copy
+Edit
+                +---------------------+
+                |  Client Requests     |
+                +----------+----------+
+                           |
+                           v
+                +---------------------+
+                |    Load Balancer     |  <-- Distributes requests
+                +----------+----------+
+                           |
+         +-----------------+-----------------+
+         |                                   |
+         v                                   v
++------------------+               +-------------------+
+|    Cache Layer   | <--- (if miss) --> |    API Servers    | 
+| (Redis/Memcached)|               |  (FastAPI/Flask)   |
++------------------+               +-------------------+
+            |                               |
+            v                               v
+     +------------------+            +---------------------+
+     |    Datastore     |            |  Monitoring & Logs  | 
+     |   (SQL/NoSQL)    | <------->  |  (Prometheus, Grafana) |
+     +------------------+            +---------------------+
+4. Key Components:
+Load Balancer:
+
+Use NGINX or HAProxy for routing traffic across API servers.
+
+Supports failover, retry mechanisms, and load distribution.
+
+Cache Layer:
+
+Redis or Memcached for caching frequently accessed optimization plans.
+
+Cache miss will trigger a request to the API servers to perform the optimization.
+
+API Servers:
+
+Implemented using FastAPI for handling optimization requests.
+
+The servers can be scaled horizontally to meet the traffic demands.
+
+Datastore:
+
+A NoSQL database like MongoDB or a SQL database like PostgreSQL to store persistent data.
+
+Data like container status, move history, etc., can be stored and queried as required.
+
+Monitoring & Logs:
+
+Prometheus for system monitoring and Grafana for visualizing performance metrics.
+
+Elasticsearch, Logstash, Kibana (ELK) stack for logging and monitoring errors.
+
+5. Scalability and Failure Handling:
+Horizontal Scaling:
+
+API servers can scale horizontally based on incoming traffic. If traffic increases, additional API servers can be spun up to handle more requests.
+
+Graceful Degradation:
+
+In case of high load or failure, the system can serve cached results for some requests, ensuring that the system doesn't go down completely.
+
+Failover Mechanisms:
+
+If an API server fails, the load balancer redirects traffic to healthy instances.
+
+Cache layer replication ensures high availability.
+
+Auto-Scaling:
+
+Cloud-based solutions like AWS Auto Scaling or Kubernetes Horizontal Pod Autoscaler can automatically scale the API servers based on the load.
+
+6. Conclusion:
+This architecture ensures that the optimization API can handle high concurrency, maintain low latency, and degrade gracefully under load. Horizontal scaling, load balancing, caching, and auto-scaling ensure that the system can serve requests efficiently while handling failures seamlessly.                                                                                                           
